@@ -1,0 +1,13 @@
+train: C:\Users\Kenny Liang\Downloads\furniture.v2-release.yolov11\train\images
+val: C:\Users\Kenny Liang\Downloads\furniture.v2-release.yolov11\valid\images
+test: C:\Users\Kenny Liang\Downloads\furniture.v2-release.yolov11\test\images
+
+nc: 3
+names: ['Chair', 'Sofa', 'Table']
+
+roboflow:
+  workspace: roboflow-100
+  project: furniture-ngpea
+  version: 2
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/roboflow-100/furniture-ngpea/dataset/2
