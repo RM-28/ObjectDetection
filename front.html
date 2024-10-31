@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLOv11 Live Object Detection</title>
+</head>
+<body>
+    <h1>YOLOv11 Live Object Detection with WebSocket</h1>
+    <video id="webcam" autoplay></video>
+    <canvas id="canvas" style="display: none;"></canvas>
+    <img id="output" alt="YOLOv11 Detection Results">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+
+    <script>
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        const output = document.getElementById('output');
+
+        // Initialize WebSocket connection
+        
+        const socket = io('wss://objectdetection-1-3964.onrender.com/');
+
+        // Access the user's webcam
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+                video.play();
+            })
+            .catch(err => {
+                console.error("Error accessing webcam:", err);
+            });
+
+        // Capture and send frames to the server via WebSocket
+        function captureFrame() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+
+            // Draw the video frame to the canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert the canvas to a base64 image string
+            const imageData = canvas.toDataURL('image/jpeg').split(',')[1];  // Remove the 'data:image/jpeg;base64,' prefix
+
+            // Send the base64 image to the server
+            socket.emit('frame', { image: imageData });
+        }
+
+        // Listen for the processed frame from the server
+        socket.on('processed_frame', (data) => {
+            // Set the output image to the processed frame received from the server
+            output.src = 'data:image/jpeg;base64,' + data.image;
+        });
+
+        // Capture frames and send to the server at a regular interval (e.g., every 100ms)
+        setInterval(captureFrame, 100);  // Adjust the interval for optimal performance
+    </script>
+</body>
+</html>
