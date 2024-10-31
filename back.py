@@ -53,4 +53,4 @@ def handle_frame(data):
     #print("req")
 if __name__ == '__main__':
     # Use eventlet for asynchronous handling
-    socketio.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)), debug=True)
+    socketio.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 10000)), debug=True)
