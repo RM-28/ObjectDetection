@@ -5,6 +5,7 @@ import base64
 import cv2
 import numpy as np
 from ultralytics import YOLO
+import eventlet
 
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
