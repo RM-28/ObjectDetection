@@ -3,9 +3,6 @@ from flask_socketio import SocketIO
 import base64
 import cv2
 import numpy as np
-from io import BytesIO
-from PIL import Image
-import torch
 from ultralytics import YOLO
 
 app = Flask(__name__)
