@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template
 from flask_socketio import SocketIO
 import base64
@@ -6,7 +7,7 @@ import numpy as np
 from ultralytics import YOLO
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins="*")
 model = YOLO("finalv3.pt")
 
 
@@ -52,4 +53,4 @@ def handle_frame(data):
     #print("req")
 if __name__ == '__main__':
     # Use eventlet for asynchronous handling
-    socketio.run(app, host='0.0.0.0', port=10000, debug=True)
+    socketio.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)), debug=True)
