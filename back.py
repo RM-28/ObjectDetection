@@ -52,4 +52,4 @@ def handle_frame(data):
     #print("req")
 if __name__ == '__main__':
     # Use eventlet for asynchronous handling
-    socketio.run(app, host='0.0.0.0', port=8000, debug=True)
+    socketio.run(app, host='0.0.0.0', port=10000, debug=True)
