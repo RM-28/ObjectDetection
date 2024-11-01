@@ -1,57 +1,51 @@
-import os
-from flask import Flask, render_template
-from flask_socketio import SocketIO
-import base64
-import cv2
-import numpy as np
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import HTMLResponse, StreamingResponse
+import io
+from PIL import Image
 from ultralytics import YOLO
-import eventlet
+import cv2 
 
-app = Flask(__name__)
-socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins=['http://127.0.0.1:5500'])
+app = FastAPI()
+
 model = YOLO("finalv4.pt")
 
 
-# Load YOLO model (use YOLOv11 if available)
-#model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
-def prediction(image):
-    model.predict(source=image, stream=True)
+# Route to render the HTML form
+@app.get("/", response_class=HTMLResponse)
+async def main():
+    html_content = """
+    <html>
+        <head>
+            <title>Image Upload</title>
+        </head>
+        <body>
+            <h1>Upload an Image</h1>
+            <form action="/predicted_image/" enctype="multipart/form-data" method="post">
+                <input name="file" type="file" accept="image/*">
+                <input type="submit">
+            </form>
+        </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
 
+# Route to handle image upload
+@app.post("/predicted_image/")
+async def upload_file(file: UploadFile):
 
-def decode_image(image_data):
-    """ Decode base64 image from string """
-    image_data = base64.b64decode(image_data)
-    np_image = np.frombuffer(image_data, dtype=np.uint8)
-    return cv2.imdecode(np_image, cv2.IMREAD_COLOR)
+    image_bytes = await file.read()
+    img = Image.open(io.BytesIO(image_bytes))
+    results = model(img)
+    results = results[0].plot()
+    results = cv2.cvtColor(results, cv2.COLOR_BGR2RGB)
+    return_img = Image.fromarray(results)
+    buf = io.BytesIO()
+    return_img.save(buf, format="JPEG")
+    buf.seek(0)
+    return StreamingResponse(buf, media_type="image/jpeg")
 
-def encode_image(image):
-    """ Encode image back to base64 format for transmission """
-    _, buffer = cv2.imencode('.jpg', image)
-    return base64.b64encode(buffer).decode('utf-8')
-
-@socketio.on('frame')
-def handle_frame(data):
-    # Get base64 image data from the frontend
-    frame_data = data['image']
-    # Decode the frame from base64
-    frame = decode_image(frame_data)
-    
-
-    # Perform YOLOv11 inference
-    results = model(frame, verbose=False, stream_buffer = True)
-    annotated_frame = results[0].plot()
-    #results.numpy()
-    #results.render()  # Annotates results onto the image
-    #results = np.array(results)
-    #results = cv2.UMat(results)
-  
-    
-    # Encode the annotated frame back to base64
-    annotated_frame = encode_image(annotated_frame)
-
-    # Send the processed frame back to the frontend
-    socketio.emit('processed_frame', {'image': annotated_frame})
-    #print("req")
-if __name__ == '__main__':
-    # Use eventlet for asynchronous handling
-    socketio.run(app, host='0.0.0.0', port=int(os.environ.get('PORT', 10000)), debug=True)
+# To serve the uploaded files, we can add an additional route
+@app.get("/uploads/")
+async def get_file():
+    print("upload")
+ 
