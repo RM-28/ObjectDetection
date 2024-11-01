@@ -9,7 +9,7 @@ import eventlet
 
 app = Flask(__name__)
 socketio = SocketIO(app, async_mode='eventlet', cors_allowed_origins=['http://127.0.0.1:5500'])
-model = YOLO("finalv3.pt")
+model = YOLO("finalv4.pt")
 
 
 # Load YOLO model (use YOLOv11 if available)
